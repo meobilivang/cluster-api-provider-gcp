@@ -22,11 +22,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	infrav1 "sigs.k8s.io/cluster-api-provider-gcp/api/v1beta1"
 	"sigs.k8s.io/cluster-api-provider-gcp/cloud/scope"
 	"sigs.k8s.io/cluster-api-provider-gcp/cloud/services/compute/instances"
 	"sigs.k8s.io/cluster-api-provider-gcp/util/reconciler"
+	"sigs.k8s.io/cluster-api-provider-gcp/util/telemetry"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	capierrors "sigs.k8s.io/cluster-api/errors"
 	"sigs.k8s.io/cluster-api/util"
@@ -57,6 +60,15 @@ type GCPMachineReconciler struct {
 
 func (r *GCPMachineReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	log := ctrl.LoggerFrom(ctx)
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "controllers.GCPMachineReconciler.SetupWithManager",
+		trace.WithAttributes(
+			attribute.String("controller", "GCPMachine"),
+		),
+	)
+	defer span.End()
+
 	c, err := ctrl.NewControllerManagedBy(mgr).
 		WithOptions(options).
 		For(&infrav1.GCPMachine{}).
@@ -136,6 +148,17 @@ func (r *GCPMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	defer cancel()
 
 	log := ctrl.LoggerFrom(ctx)
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "controllers.GCPMachineReconciler.Reconcile",
+		trace.WithAttributes(
+			attribute.String("name", req.Name),
+			attribute.String("namespace", req.Namespace),
+			attribute.String("kind", "GCPMachine"),
+		),
+	)
+	defer span.End()
+
 	gcpMachine := &infrav1.GCPMachine{}
 	err := r.Get(ctx, req.NamespacedName, gcpMachine)
 	if err != nil {
@@ -218,6 +241,12 @@ func (r *GCPMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 func (r *GCPMachineReconciler) reconcile(ctx context.Context, machineScope *scope.MachineScope) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "controllers.GCPMachineReconciler.reconcile",
+	)
+	defer span.End()
+
 	log.Info("Reconciling GCPMachine")
 
 	controllerutil.AddFinalizer(machineScope.GCPMachine, infrav1.MachineFinalizer)
@@ -252,6 +281,12 @@ func (r *GCPMachineReconciler) reconcile(ctx context.Context, machineScope *scop
 
 func (r *GCPMachineReconciler) reconcileDelete(ctx context.Context, machineScope *scope.MachineScope) (_ ctrl.Result, reterr error) {
 	log := log.FromContext(ctx)
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "controllers.GCPMachineReconciler.reconcileDelete",
+	)
+	defer span.End()
+
 	log.Info("Reconciling Delete GCPMachine")
 
 	if err := instances.New(machineScope).Delete(ctx); err != nil {
