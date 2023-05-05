@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/pkg/version"
 	"k8s.io/client-go/util/flowcontrol"
 	infrav1 "sigs.k8s.io/cluster-api-provider-gcp/api/v1beta1"
+	"sigs.k8s.io/cluster-api-provider-gcp/util/telemetry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -89,6 +90,12 @@ func defaultClientOptions(ctx context.Context, credentialsRef *infrav1.ObjectRef
 }
 
 func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*compute.Service, error) {
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "cloud.clients.newComputeService",
+	)
+	defer span.End()
+
 	opts, err := defaultClientOptions(ctx, credentialsRef, crClient)
 	if err != nil {
 		return nil, fmt.Errorf("getting default gcp client options: %w", err)
@@ -103,6 +110,12 @@ func newComputeService(ctx context.Context, credentialsRef *infrav1.ObjectRefere
 }
 
 func newClusterManagerClient(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*container.ClusterManagerClient, error) {
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "cloud.clients.newClusterManagerClient",
+	)
+	defer span.End()
+
 	opts, err := defaultClientOptions(ctx, credentialsRef, crClient)
 	if err != nil {
 		return nil, fmt.Errorf("getting default gcp client options: %w", err)
@@ -117,6 +130,12 @@ func newClusterManagerClient(ctx context.Context, credentialsRef *infrav1.Object
 }
 
 func newIamCredentialsClient(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*credentials.IamCredentialsClient, error) {
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "cloud.clients.newIamCredentialsClient",
+	)
+	defer span.End()
+
 	opts, err := defaultClientOptions(ctx, credentialsRef, crClient)
 	if err != nil {
 		return nil, fmt.Errorf("getting default gcp client options: %w", err)
@@ -131,6 +150,12 @@ func newIamCredentialsClient(ctx context.Context, credentialsRef *infrav1.Object
 }
 
 func newInstanceGroupManagerClient(ctx context.Context, credentialsRef *infrav1.ObjectReference, crClient client.Client) (*computerest.InstanceGroupManagersClient, error) {
+
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "cloud.clients.newInstanceGroupManagerClient",
+	)
+	defer span.End()
+
 	opts, err := defaultClientOptions(ctx, credentialsRef, crClient)
 	if err != nil {
 		return nil, fmt.Errorf("getting default gcp client options: %w", err)
