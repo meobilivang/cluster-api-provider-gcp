@@ -21,11 +21,17 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
 	"sigs.k8s.io/cluster-api-provider-gcp/cloud/gcperrors"
+	"sigs.k8s.io/cluster-api-provider-gcp/util/telemetry"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // Reconcile reconcile cluster firewall compoenents.
 func (s *Service) Reconcile(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "firewalls.Services.Reconcile",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	log.Info("Reconciling firewall resources")
 	for _, spec := range s.scope.FirewallRulesSpec() {
@@ -48,6 +54,11 @@ func (s *Service) Reconcile(ctx context.Context) error {
 
 // Delete delete cluster firewall compoenents.
 func (s *Service) Delete(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "firewalls.Services.Delete",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	log.Info("Deleting firewall resources")
 	for _, spec := range s.scope.FirewallRulesSpec() {

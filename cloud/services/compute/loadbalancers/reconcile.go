@@ -23,11 +23,17 @@ import (
 	"google.golang.org/api/compute/v1"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/cluster-api-provider-gcp/cloud/gcperrors"
+	"sigs.k8s.io/cluster-api-provider-gcp/util/telemetry"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // Reconcile reconcile cluster control-plane loadbalancer compoenents.
 func (s *Service) Reconcile(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.Reconcile",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	log.Info("Reconciling loadbalancer resources")
 	instancegroups, err := s.createOrGetInstanceGroups(ctx)
@@ -60,6 +66,11 @@ func (s *Service) Reconcile(ctx context.Context) error {
 
 // Delete delete cluster control-plane loadbalancer compoenents.
 func (s *Service) Delete(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.Delete",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	log.Info("Deleting loadbalancer resources")
 	if err := s.deleteForwardingRule(ctx); err != nil {
@@ -86,6 +97,11 @@ func (s *Service) Delete(ctx context.Context) error {
 }
 
 func (s *Service) createOrGetInstanceGroups(ctx context.Context) ([]*compute.InstanceGroup, error) {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.createOrGetInstanceGroups",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	fd := s.scope.FailureDomains()
 	zones := make([]string, 0, len(fd))
@@ -130,6 +146,11 @@ func (s *Service) createOrGetInstanceGroups(ctx context.Context) ([]*compute.Ins
 }
 
 func (s *Service) createOrGetHealthCheck(ctx context.Context) (*compute.HealthCheck, error) {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.createOrGetHealthCheck",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	healthcheckSpec := s.scope.HealthCheckSpec()
 	log.V(2).Info("Looking for healthcheck", "name", healthcheckSpec.Name)
@@ -157,6 +178,11 @@ func (s *Service) createOrGetHealthCheck(ctx context.Context) (*compute.HealthCh
 }
 
 func (s *Service) createOrGetBackendService(ctx context.Context, instancegroups []*compute.InstanceGroup, healthcheck *compute.HealthCheck) (*compute.BackendService, error) {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.createOrGetBackendService",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	backends := make([]*compute.Backend, 0, len(instancegroups))
 	for _, group := range instancegroups {
@@ -202,6 +228,11 @@ func (s *Service) createOrGetBackendService(ctx context.Context, instancegroups 
 }
 
 func (s *Service) createOrGetTargetTCPProxy(ctx context.Context, service *compute.BackendService) (*compute.TargetTcpProxy, error) {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.createOrGetTargetTCPProxy",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	targetSpec := s.scope.TargetTCPProxySpec()
 	targetSpec.Service = service.SelfLink
@@ -229,6 +260,11 @@ func (s *Service) createOrGetTargetTCPProxy(ctx context.Context, service *comput
 }
 
 func (s *Service) createOrGetAddress(ctx context.Context) (*compute.Address, error) {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.createOrGetAddress",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	addrSpec := s.scope.AddressSpec()
 	log.V(2).Info("Looking for address", "name", addrSpec.Name)
@@ -259,6 +295,11 @@ func (s *Service) createOrGetAddress(ctx context.Context) (*compute.Address, err
 }
 
 func (s *Service) createForwardingRule(ctx context.Context, target *compute.TargetTcpProxy, addr *compute.Address) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.createForwardingRule",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	spec := s.scope.ForwardingRuleSpec()
 	key := meta.GlobalKey(spec.Name)
@@ -289,6 +330,11 @@ func (s *Service) createForwardingRule(ctx context.Context, target *compute.Targ
 }
 
 func (s *Service) deleteForwardingRule(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.deleteForwardingRule",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	spec := s.scope.ForwardingRuleSpec()
 	key := meta.GlobalKey(spec.Name)
@@ -303,6 +349,11 @@ func (s *Service) deleteForwardingRule(ctx context.Context) error {
 }
 
 func (s *Service) deleteAddress(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.deleteAddress",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	spec := s.scope.AddressSpec()
 	key := meta.GlobalKey(spec.Name)
@@ -316,6 +367,11 @@ func (s *Service) deleteAddress(ctx context.Context) error {
 }
 
 func (s *Service) deleteTargetTCPProxy(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.deleteTargetTCPProxy",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	spec := s.scope.TargetTCPProxySpec()
 	key := meta.GlobalKey(spec.Name)
@@ -330,6 +386,11 @@ func (s *Service) deleteTargetTCPProxy(ctx context.Context) error {
 }
 
 func (s *Service) deleteBackendService(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.deleteBackendService",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	spec := s.scope.BackendServiceSpec()
 	key := meta.GlobalKey(spec.Name)
@@ -344,6 +405,11 @@ func (s *Service) deleteBackendService(ctx context.Context) error {
 }
 
 func (s *Service) deleteHealthCheck(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.deleteHealthCheck",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	spec := s.scope.HealthCheckSpec()
 	key := meta.GlobalKey(spec.Name)
@@ -358,6 +424,11 @@ func (s *Service) deleteHealthCheck(ctx context.Context) error {
 }
 
 func (s *Service) deleteInstanceGroups(ctx context.Context) error {
+	ctx, span := telemetry.Tracer().Start(
+		ctx, "loadbalancers.Services.deleteInstanceGroups",
+	)
+	defer span.End()
+
 	log := log.FromContext(ctx)
 	for zone := range s.scope.Network().APIServerInstanceGroups {
 		spec := s.scope.InstanceGroupSpec(zone)
